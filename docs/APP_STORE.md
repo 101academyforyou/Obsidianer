@@ -76,7 +76,7 @@ npm run android   # 建置網頁 → 同步 → 開啟 Android Studio
    - 類別：**教育**（次要類別：生產力工具）
    - 截圖：依 App Store Connect 要求的 iPhone 尺寸上傳（可以用模擬器 ⌘S 截圖）；如果要支援 iPad，也要上傳 iPad 截圖
    - 描述、關鍵字、支援網址
-   - **隱私權政策網址**：部署網頁版後填 `https://你的網址/privacy.html`
+   - **隱私權政策網址**：`https://obsidianer.onepointzeroone.org/privacy.html`
 5. **App 隱私（營養標籤）**：選擇 **「不蒐集資料」（Data Not Collected）**。本 App 沒有帳號、廣告、分析工具，進度只存在裝置上。
 6. **年齡分級**：所有問題選「無」，結果是 4+。
 7. **出口合規**：`Info.plist` 已設定 `ITSAppUsesNonExemptEncryption = false`，上傳後不會再被詢問加密問題。
@@ -102,10 +102,10 @@ Apple 可能拒絕「只是把網站包起來」的 App。Obsidianer 的內容�
 
 ## 5. 網頁版
 
-網頁版就是專案根目錄本身，不需要建置：
+網頁版網址：**https://obsidianer.onepointzeroone.org/**，用 GitHub Pages 發布。詳細設定步驟見 [DEPLOY.md](DEPLOY.md)。
 
-- **GitHub Pages**：repo → Settings → Pages → Source 選 **GitHub Actions**，合併到 `main` 後 `.github/workflows/pages.yml` 會自動部署。
-- 其他平台（Netlify、Vercel、Cloudflare Pages）：發布目錄設為專案根目錄即可。
+- 推送到 `main` 後，`.github/workflows/pages.yml` 會執行 `scripts/build-www.mjs`，只把網頁檔案發布出去（不含 `ios/`、`android/`）。
+- 其他平台（Netlify、Vercel、Cloudflare Pages）：建置指令填 `node scripts/build-www.mjs`，發布目錄填 `www`。
 
 網頁版也是 PWA：使用者可以從瀏覽器「加到主畫面」，離線也能使用。
 

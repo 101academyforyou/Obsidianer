@@ -1,5 +1,5 @@
 /* 離線快取：先回快取，背景更新 */
-const CACHE = 'obsidianer-v2';
+const CACHE = 'obsidianer-v3';
 const ASSETS = [
   './', './index.html', './privacy.html', './css/style.css', './js/markdown.js', './js/lessons.js', './js/app.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'

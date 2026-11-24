@@ -1,5 +1,7 @@
 # Obsidianer · Obsidian 新手學院 💎
 
+🌐 網頁版：https://obsidianer.onepointzeroone.org/
+
 給**完全初學者**用「滑卡片」的方式學習 [Obsidian](https://obsidian.md) 的 App + 網頁，採用 Obsidian 風格的紫黑色深色主題。
 
 每張卡片用 30 秒介紹一個 Obsidian 功能，有興趣就點進去，進入專屬的學習頁面（教學、動手練習、小測驗）。
@@ -53,10 +55,11 @@ npm run android   # 需要 Android Studio
 
 上架 App Store / Google Play 的完整步驟（含商標、隱私權、審核注意事項）請看 **[docs/APP_STORE.md](docs/APP_STORE.md)**。
 
-## 部署網頁版
+## 網頁版
 
-已附上 GitHub Pages 工作流程 `.github/workflows/pages.yml`：
-到 repo 的 **Settings → Pages → Source** 選擇 **GitHub Actions**，推送到 `main` 後就會自動部署。
+🌐 **https://obsidianer.onepointzeroone.org/**
+
+用 GitHub Pages 自動部署：推送到 `main` 後就會更新。第一次設定（DNS、自訂網域、HTTPS）請看 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 ## 專案結構
 
