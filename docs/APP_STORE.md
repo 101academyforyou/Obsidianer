@@ -1,5 +1,7 @@
 # 上架指南：App Store、Google Play 與網頁版
 
+> 💡 **不想在自己電腦裝 Xcode？** 用 GitHub 雲端 Mac 一鍵打包上傳：見 **[IOS_CLOUD_BUILD.md](IOS_CLOUD_BUILD.md)**。
+
 ## ✅ 已決定的設定
 
 | 項目 | 設定 |
@@ -8,6 +10,7 @@
 | 副標題 | 非官方 Obsidian 新手教學 |
 | Bundle ID | `app.obsidianer.learn` |
 | 裝置 | **只支援 iPhone**（`TARGETED_DEVICE_FAMILY = 1`），只能直向 |
+| 商店文案 | [APP_STORE_LISTING.md](APP_STORE_LISTING.md)：名稱、副標題、描述、關鍵字、審查備註，可直接複製 |
 | 截圖 | `assets/appstore/iphone-6.9/`：6 張 1320 × 2868，可直接上傳到 6.9 吋 iPhone 欄位 |
 | 隱私權政策 | https://obsidianer.onepointzeroone.org/privacy.html |
 | 支援網址 | https://obsidianer.onepointzeroone.org/ |
