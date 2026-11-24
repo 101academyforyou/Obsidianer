@@ -778,8 +778,34 @@ task-todo: tag:#工作
     { id: 'grad', ico: '🎓', name: 'Obsidian 畢業生', desc: '完成全部課程', test: (p) => p.done >= p.total },
     { id: 'perfect', ico: '🎯', name: '神準', desc: '5 課測驗一次全對', test: (p) => p.perfect >= 5 },
     { id: 'streak3', ico: '🔥', name: '三日不輟', desc: '連續學習 3 天', test: (p) => p.streak >= 3 },
-    { id: 'play', ico: '🧪', name: '實驗家', desc: '使用過練習場', test: (p) => p.played }
+    { id: 'play', ico: '🧪', name: '實驗家', desc: '使用過練習場', test: (p) => p.played },
+    { id: 'swipe', ico: '🃏', name: '探索者', desc: '滑完所有卡片', test: (p) => p.swipedAll }
   ];
 
-  global.COURSE = { CHAPTERS, LESSONS, SAMPLE_VAULT, PLAYGROUND_DEFAULT, SHORTCUTS, BADGES };
+
+  // 滑卡探索：每張卡片的一句話介紹與小預覽
+  // render: 用 Markdown 渲染並顯示原始碼；code: 只顯示程式碼；html: 自訂視覺
+  const CARDS = {
+    '1-1': { hook: '你的筆記就是電腦裡的純文字檔。不被任何公司綁住，十年後也打得開。', code: '📁 我的知識庫/\n ├─ 📄 原子習慣.md\n ├─ 📄 每日筆記.md\n └─ 📄 靈感.md' },
+    '1-2': { hook: 'Vault 就是一個資料夾。建立它，你的第二大腦就開始長大了。', html: '<div class="cv-steps"><span>⬇️ 下載</span><b>›</b><span>📁 建立 Vault</span><b>›</b><span>✍️ 開始寫</span></div>' },
+    '1-3': { hook: '忘記功能在哪？一個快捷鍵就能搜尋 Obsidian 的所有指令。', html: '<div class="cv-palette"><div class="cv-input">🔍 新增筆記…</div><div class="sel">建立新筆記 <kbd>Ctrl/⌘ N</kbd></div><div>開啟關係圖譜 <kbd>Ctrl/⌘ G</kbd></div><div>切換閱讀模式 <kbd>Ctrl/⌘ E</kbd></div></div><p class="cv-cap">按 <kbd>Ctrl/⌘</kbd> + <kbd>P</kbd></p>' },
+    '2-1': { hook: '一個 # 加一個空格，就是標題。筆記結構瞬間清楚。', render: '# 大標題\n## 第二層\n### 第三層' },
+    '2-2': { hook: '不用滑鼠點按鈕，幾個符號就能讓重點跳出來。', render: '**粗體**、*斜體*、==螢光筆==、~~刪除線~~' },
+    '2-3': { hook: '購物清單、讀書計畫、今日待辦，打個 - [ ] 就能打勾。', render: '- [x] 安裝 Obsidian\n- [ ] 寫第一篇筆記\n  - [ ] 加上一個連結' },
+    '2-4': { hook: '用 Callout 做出彩色提示框，筆記立刻專業起來。', render: '> [!tip] 小提醒\n> 每天寫一點就好！' },
+    '3-1': { hook: 'Obsidian 的靈魂：用 [[ ]] 把想法串成一張網。', render: '今天讀了 [[原子習慣]]，想到 [[刻意練習]]' },
+    '3-2': { hook: '打開一篇筆記，就能看到「誰提到了我」，意外的關聯自己浮現。', html: '<div class="cv-panel"><div class="cv-ph">🔗 反向連結 · 番茄鐘工作法</div><div>📄 2026-08-03 日記</div><div>📄 期末考準備</div><div class="faint">👀 未連結提及：深度工作</div></div>' },
+    '3-3': { hook: '在筆記裡直接「顯示」另一篇筆記，改一次、處處更新。', render: '![[四大法則]]' },
+    '4-1': { hook: '資料夾、標籤、連結，各有各的用途。學會分工，整理不再頭痛。', render: '好點子 #靈感 #專案/網站改版' },
+    '4-2': { hook: '幫筆記加上作者、評分、狀態，筆記就變成可以查詢的資料。', render: '---\n作者: James Clear\n評分: 5\n狀態: 已讀完\n---' },
+    '4-3': { hook: '筆記上千篇也找得到：用搜尋語法精準定位。', code: 'path:讀書筆記 tag:#商業 -草稿\ntask-todo: 報告\n"原子習慣" OR 習慣' },
+    '5-1': { hook: '把所有筆記和連結畫成一張星空圖，看見你的知識全貌。', html: '<svg class="cv-graph" viewBox="0 0 240 130"><g stroke="#8a5cf5" stroke-opacity=".5"><line x1="120" y1="65" x2="60" y2="30"/><line x1="120" y1="65" x2="185" y2="35"/><line x1="120" y1="65" x2="80" y2="105"/><line x1="120" y1="65" x2="175" y2="100"/><line x1="60" y1="30" x2="30" y2="70"/><line x1="185" y1="35" x2="215" y2="75"/><line x1="175" y1="100" x2="215" y2="75"/></g><g fill="#a88bfa"><circle cx="120" cy="65" r="9" fill="#c4b5fd"/><circle cx="60" cy="30" r="6"/><circle cx="185" cy="35" r="6"/><circle cx="80" cy="105" r="5"/><circle cx="175" cy="100" r="6"/><circle cx="30" cy="70" r="4" fill="#777"/><circle cx="215" cy="75" r="5"/></g></svg>' },
+    '5-2': { hook: '無限大的白板：拖進筆記、畫上箭頭，腦力激盪超自由。', html: '<svg class="cv-graph" viewBox="0 0 240 130"><g fill="#262626" stroke="#8a5cf5" stroke-width="1.5"><rect x="12" y="14" width="78" height="40" rx="6"/><rect x="150" y="14" width="78" height="40" rx="6"/><rect x="80" y="80" width="80" height="40" rx="6" stroke="#4ade80"/></g><g stroke="#a88bfa" stroke-width="1.5" fill="none"><path d="M90 34h60"/><path d="M51 54v26h29"/></g><g fill="#dcddde" font-size="11" text-anchor="middle"><text x="51" y="38">💡 想法</text><text x="189" y="38">📄 筆記</text><text x="120" y="104">✅ 行動</text></g></svg>' },
+    '5-3': { hook: '每天一篇日記，套上範本，記錄變成不費力的習慣。', code: '---\n日期: {{date}}\n---\n## ✅ 今日待辦\n- [ ] \n## 🌙 今日回顧' },
+    '6-1': { hook: '上千個社群外掛，把 Obsidian 變成你需要的任何工具。', html: '<div class="cv-chips"><span>📅 Calendar</span><span>📊 Dataview</span><span>✅ Tasks</span><span>✏️ Excalidraw</span><span>🧩 Templater</span><span>🗃️ Bases</span></div>' },
+    '6-2': { hook: '電腦寫、手機看，筆記永遠同步，也永遠不會遺失。', html: '<div class="cv-sync"><span>💻</span><i>⇄</i><span>☁️</span><i>⇄</i><span>📱</span></div>' },
+    '6-3': { hook: 'PARA、卡片盒、MOC：挑一個方法，打造真正屬於你的第二大腦。', html: '<div class="cv-chips big"><span>📂 PARA</span><span>🗃️ Zettelkasten</span><span>🗺️ MOC</span></div>' }
+  };
+
+  global.COURSE = { CHAPTERS, LESSONS, SAMPLE_VAULT, PLAYGROUND_DEFAULT, SHORTCUTS, BADGES, CARDS };
 })(window);

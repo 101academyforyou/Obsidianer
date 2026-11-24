@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const { CHAPTERS, LESSONS, SAMPLE_VAULT, PLAYGROUND_DEFAULT, SHORTCUTS, BADGES } = window.COURSE;
+  const { CHAPTERS, LESSONS, SAMPLE_VAULT, PLAYGROUND_DEFAULT, SHORTCUTS, BADGES, CARDS } = window.COURSE;
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = window.MD.esc;
@@ -10,7 +10,7 @@
 
   /* ---------------- 儲存 ---------------- */
   const KEY = 'obsidianer:v1';
-  const defaults = () => ({ done: {}, xp: 0, days: [], played: false, playground: null, practice: {} });
+  const defaults = () => ({ done: {}, xp: 0, days: [], played: false, playground: null, practice: {}, saved: [], feedPos: 0, swipedAll: false });
   let state = load();
   function load() {
     try { return Object.assign(defaults(), JSON.parse(localStorage.getItem(KEY) || '{}')); }
@@ -38,14 +38,15 @@
   /* ---------------- 進度 ---------------- */
   const idx = (id) => LESSONS.findIndex((l) => l.id === id);
   const isDone = (id) => !!state.done[id];
-  const isUnlocked = (id) => { const i = idx(id); return i <= 0 || isDone(id) || isDone(LESSONS[i - 1].id); };
+  // 所有課程都開放：使用者可以從卡片挑有興趣的主題直接學
+  const isUnlocked = () => true;
   const doneCount = () => LESSONS.filter((l) => isDone(l.id)).length;
   const nextLesson = () => LESSONS.find((l) => !isDone(l.id)) || null;
   const chLessons = (ch) => LESSONS.filter((l) => l.ch === ch);
   const chDone = (ch) => chLessons(ch).every((l) => isDone(l.id));
   const level = () => Math.floor(state.xp / 50) + 1;
   const profile = () => ({
-    done: doneCount(), total: LESSONS.length, chDone, streak: streak(), played: state.played,
+    done: doneCount(), total: LESSONS.length, chDone, streak: streak(), played: state.played, swipedAll: state.swipedAll,
     perfect: Object.values(state.done).filter((d) => d.perfect).length
   });
   function earnedBadges() { const p = profile(); return BADGES.filter((b) => b.test(p)); }
@@ -59,11 +60,25 @@
     markActive();
     save();
     toast('✨ 完成課程！獲得 ' + gain + ' XP');
+    haptic('success');
     earnedBadges().filter((b) => !before.has(b.id)).forEach((b, i) => setTimeout(() => toast(b.ico + ' 獲得徽章：' + b.name), 700 * (i + 1)));
     confetti();
     updateChrome();
     return gain;
   }
+
+  /* ---------------- 原生 App（Capacitor）---------------- */
+  const native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  let hapticsPlugin = null;
+  function haptic(kind) {
+    try {
+      if (native && !hapticsPlugin) hapticsPlugin = window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('Haptics') : (window.Capacitor.Plugins || {}).Haptics;
+      const H = hapticsPlugin;
+      if (H) { kind === 'success' ? H.notification({ type: 'SUCCESS' }) : H.impact({ style: kind === 'medium' ? 'MEDIUM' : 'LIGHT' }); }
+      else if (kind === 'success' && navigator.vibrate) navigator.vibrate(20);
+    } catch (e) { /* 不支援就略過 */ }
+  }
+  if (native) document.documentElement.classList.add('native');
 
   /* ---------------- 圖示 ---------------- */
   const ICONS = {
@@ -78,14 +93,19 @@
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
-    download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/>'
+    download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/>',
+    cards: '<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    up: '<path d="m18 15-6-6-6 6"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>'
   };
   const icon = (n) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICONS[n] + '</svg>';
   let gemN = 0;
   const gem = () => { const n = ++gemN; return '<svg viewBox="0 0 100 100" class="logo-svg"><defs><linearGradient id="g1_' + n + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset=".5" stop-color="#8a5cf5"/><stop offset="1" stop-color="#3b2a85"/></linearGradient><linearGradient id="g2_' + n + '" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#2e1f6b"/></linearGradient></defs><path d="M50 4 82 30 72 86 50 96 28 86 18 30z" fill="url(#g1_' + n + ')"/><path d="M50 4 62 46 50 96 38 46z" fill="url(#g2_' + n + ')" opacity=".85"/><path d="M18 30 38 46 28 86z" fill="#5b3fc4" opacity=".7"/><path d="M82 30 62 46 72 86z" fill="#2e1f6b" opacity=".7"/><path d="M18 30 50 4 38 46z" fill="#ddd6fe" opacity=".35"/></svg>'; };
 
   const NAV = [
-    { r: '/', label: '首頁', short: '首頁', ico: 'home' },
+    { r: '/', label: '滑卡探索', short: '探索', ico: 'cards' },
+    { r: '/home', label: '學習總覽', short: '總覽', ico: 'home' },
     { r: '/path', label: '學習路徑', short: '課程', ico: 'path' },
     { r: '/playground', label: '練習場', short: '練習', ico: 'play' },
     { r: '/graph', label: '關係圖譜', short: '圖譜', ico: 'graph' },
@@ -100,7 +120,7 @@
   <aside class="ribbon" aria-label="功能區">
     <div class="logo">${gem()}</div>
     <button class="icon-btn" data-act="palette" title="命令面板 (${isMac ? '⌘' : 'Ctrl'}+K)">${icon('search')}</button>
-    ${NAV.slice(1).map((n) => `<a class="icon-btn" href="#${n.r}" data-route="${n.r}" title="${n.label}">${icon(n.ico)}</a>`).join('')}
+    ${NAV.map((n) => `<a class="icon-btn" href="#${n.r}" data-route="${n.r}" title="${n.label}">${icon(n.ico)}</a>`).join('')}
   </aside>
   <aside class="sidebar">
     <div class="brand"><div style="width:34px;height:34px">${gem()}</div><div><div class="brand-name">Obsidianer</div><div class="brand-sub">Obsidian 新手學院</div></div></div>
@@ -120,7 +140,7 @@
     </header>
     <main class="view" id="view"></main>
   </div>
-  <nav class="bottom-nav">${NAV.filter((n) => n.r !== '/shortcuts').map((n) => `<a href="#${n.r}" data-route="${n.r}">${icon(n.ico)}<span>${n.short}</span></a>`).join('')}</nav>
+  <nav class="bottom-nav">${NAV.filter((n) => n.r !== '/shortcuts' && n.r !== '/home').map((n) => `<a href="#${n.r}" data-route="${n.r}">${icon(n.ico)}<span>${n.short}</span></a>`).join('')}</nav>
 </div>
 <div class="toast-wrap" id="toasts"></div>`;
     document.addEventListener('click', (e) => {
@@ -154,6 +174,7 @@
 
   /* ---------------- 路由 ---------------- */
   let cleanup = null;
+  let lastList = '#/';
   function route() {
     const hash = location.hash.replace(/^#/, '') || '/';
     if (cleanup) { cleanup(); cleanup = null; }
@@ -161,14 +182,17 @@
     view.className = 'view';
     const parts = hash.split('/').filter(Boolean);
     setActiveNav(hash);
-    if (!parts.length) homeView(view);
+    document.body.classList.remove('feed-mode');
+    if (parts[0] !== 'lesson') lastList = '#' + (parts.length ? '/' + parts[0] : '/');
+    if (!parts.length) feedView(view);
+    else if (parts[0] === 'home') homeView(view);
     else if (parts[0] === 'path') pathView(view);
     else if (parts[0] === 'lesson' && parts[1]) lessonView(view, decodeURIComponent(parts[1]));
     else if (parts[0] === 'playground') playgroundView(view);
     else if (parts[0] === 'graph') graphView(view);
     else if (parts[0] === 'shortcuts') shortcutsView(view);
     else if (parts[0] === 'profile') profileView(view);
-    else homeView(view);
+    else feedView(view);
     window.scrollTo(0, 0);
     updateChrome();
   }
@@ -219,11 +243,136 @@ ${next ? `
     $('#install-card').addEventListener('click', promptInstall);
   }
 
+  /* ---------------- 收藏 ---------------- */
+  const isSaved = (id) => state.saved.includes(id);
+  function toggleSave(id) {
+    if (isSaved(id)) state.saved = state.saved.filter((x) => x !== id);
+    else { state.saved.push(id); toast('♥ 已加入收藏，可在「課程」頁找到'); }
+    save(); haptic('light');
+    $$('[data-save="' + id + '"]').forEach((b) => {
+      const on = isSaved(id);
+      b.classList.toggle('on', on);
+      b.innerHTML = b.classList.contains('fc-save') ? icon('heart') + '<span>' + (on ? '已收藏' : '收藏') + '</span>' : (on ? '♥ 已收藏' : '♡ 收藏');
+    });
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-save]');
+    if (b) { e.preventDefault(); e.stopPropagation(); toggleSave(b.dataset.save); }
+  });
+  function savedHTML() {
+    const ls = LESSONS.filter((l) => isSaved(l.id));
+    if (!ls.length) return '';
+    return `<section class="chapter"><div class="chapter-head"><span class="chapter-num">♥</span><h2>我的收藏</h2></div><div class="lesson-list">${ls.map((l) => `<a class="lesson-item ${isDone(l.id) ? 'done' : ''}" href="#/lesson/${l.id}"><div class="state">${isDone(l.id) ? '✓' : '♥'}</div><div class="meta"><div class="t">${l.emoji} ${l.title}</div><div class="d">${esc(CARDS[l.id].hook)}</div></div></a>`).join('')}</div></section>`;
+  }
+
+  /* ---------------- 滑卡探索 ---------------- */
+  const CH_HUE = [262, 280, 248, 292, 236, 305];
+  function cardPreview(c) {
+    if (c.render) return `<div class="fc-split"><pre class="fc-src">${esc(c.render)}</pre><div class="md fc-out">${renderMD(c.render)}</div></div>`;
+    if (c.code) return `<pre class="fc-src fc-code">${esc(c.code)}</pre>`;
+    return `<div class="fc-visual">${c.html}</div>`;
+  }
+
+  function feedView(v) {
+    setTitle('探索');
+    v.className = 'view feed-view';
+    document.body.classList.add('feed-mode');
+    const N = LESSONS.length;
+    const first = `<section class="fcard" data-i="0" style="--h:262"><div class="fcard-inner fc-welcome">
+      <div class="fc-gem">${gem()}</div>
+      <h2 class="fc-title">滑動探索 Obsidian</h2>
+      <p class="fc-hook">每張卡片介紹一個 Obsidian 功能，30 秒看懂。<br>有興趣就點進去，跟著專屬課程一步步學會。</p>
+      <div class="cv-chips"><span>🃏 ${N} 張功能卡</span><span>✍️ 動手練習</span><span>📝 小測驗</span></div>
+      <div class="swipe-hint"><span class="arrow">${icon('up')}</span><span class="only-touch">向上滑開始</span><span class="only-mouse">滾動滑鼠或按 ↓ 開始</span></div>
+    </div></section>`;
+    const body = LESSONS.map((l, k) => {
+      const c = CARDS[l.id]; const ch = CHAPTERS[l.ch - 1];
+      return `<section class="fcard" data-i="${k + 1}" data-id="${l.id}" style="--h:${CH_HUE[l.ch - 1]}"><div class="fcard-inner">
+        <div class="fc-top"><span class="pill accent">${ch.emoji} ${ch.title}</span><span class="fc-num">${k + 1} / ${N}</span></div>
+        <div class="fc-head"><div class="fc-emoji">${l.emoji}</div><div><h2 class="fc-title">${l.title}</h2>${isDone(l.id) ? '<span class="pill green">✓ 已學會</span>' : ''}</div></div>
+        <p class="fc-hook">${esc(c.hook)}</p>
+        <div class="fc-preview">${cardPreview(c)}</div>
+        <div class="fc-meta">⏱ ${l.minutes} 分鐘${l.practice ? ' · ✍️ 含實作' : ''} · 📝 ${l.quiz.length} 題測驗</div>
+        <div class="fc-actions">
+          <button class="fc-save ${isSaved(l.id) ? 'on' : ''}" data-save="${l.id}" aria-label="收藏">${icon('heart')}<span>${isSaved(l.id) ? '已收藏' : '收藏'}</span></button>
+          <a class="btn primary fc-go" href="#/lesson/${l.id}">${isDone(l.id) ? '再複習一次' : '深入學習'} ${icon('arrow')}</a>
+        </div>
+      </div></section>`;
+    }).join('');
+    const n = doneCount();
+    const nl = nextLesson();
+    const last = `<section class="fcard" data-i="${N + 1}" style="--h:280"><div class="fcard-inner fc-welcome">
+      <div style="font-size:64px">🎉</div>
+      <h2 class="fc-title">你滑完所有卡片了！</h2>
+      <p class="fc-hook">已學會 ${n} / ${N} 個功能，收藏了 ${state.saved.length} 張卡片。<br>${n < N ? '挑一張有興趣的，點進去深入學習吧。' : '你已經是 Obsidian 高手了 💜'}</p>
+      <div class="fc-end-actions">
+        ${nl ? `<a class="btn primary" href="#/lesson/${nl.id}">繼續學：${nl.title}</a>` : ''}
+        <a class="btn" href="#/path">查看完整學習路徑</a>
+        <button class="btn ghost" id="fc-restart">${icon('up')} 回到第一張</button>
+      </div>
+    </div></section>`;
+    v.innerHTML = `<div class="feed-wrap">
+      <div class="feed-progress"><span id="feed-bar"></span></div>
+      <div class="feed" id="feed">${first}${body}${last}</div>
+      <div class="feed-side"><button class="icon-btn" id="fc-up" aria-label="上一張">${icon('up')}</button><span id="fc-count"></span><button class="icon-btn" id="fc-down" aria-label="下一張">${icon('down')}</button></div>
+    </div>`;
+
+    const feed = $('#feed');
+    const total = N + 2;
+    let cur = -1; let saveT;
+    const go = (i, smooth = true) => {
+      i = Math.max(0, Math.min(total - 1, i));
+      feed.scrollTo({ top: i * feed.clientHeight, behavior: smooth ? 'smooth' : 'auto' });
+    };
+    const onScroll = () => {
+      const i = Math.round(feed.scrollTop / Math.max(1, feed.clientHeight));
+      if (i === cur) return;
+      if (cur !== -1) haptic('light');
+      cur = i;
+      $('#feed-bar').style.width = (i / (total - 1)) * 100 + '%';
+      $('#fc-count').textContent = i === 0 || i === total - 1 ? '' : i + '/' + N;
+      $('#fc-up').disabled = i === 0; $('#fc-down').disabled = i === total - 1;
+      if (i === total - 1 && !state.swipedAll) {
+        state.swipedAll = true; save();
+        const b = BADGES.find((x) => x.id === 'swipe'); if (b) setTimeout(() => toast(b.ico + ' 獲得徽章：' + b.name), 400);
+      }
+      clearTimeout(saveT); saveT = setTimeout(() => { state.feedPos = i; save(); }, 250);
+    };
+    feed.addEventListener('scroll', onScroll, { passive: true });
+    // 點卡片任何地方 = 進入該主題的學習頁
+    feed.addEventListener('click', (e) => {
+      const il = e.target.closest('.internal-link, .tag');
+      if (il) { linkClick(e); return; }
+      if (e.target.closest('a, button, input')) return;
+      const card = e.target.closest('.fcard[data-id]');
+      if (card && !(window.getSelection && String(window.getSelection()).length)) location.hash = '#/lesson/' + card.dataset.id;
+    });
+    $('#fc-up').addEventListener('click', () => go(cur - 1));
+    $('#fc-down').addEventListener('click', () => go(cur + 1));
+    $('#fc-restart').addEventListener('click', () => go(0));
+    const onKey = (e) => {
+      if ($('.palette-backdrop') || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+      if (['ArrowDown', 'PageDown', 'j', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+      else if (['ArrowUp', 'PageUp', 'k'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+      else if (e.key === 'Enter') { const c = $('.fcard[data-i="' + cur + '"]'); if (c && c.dataset.id) location.hash = '#/lesson/' + c.dataset.id; }
+    };
+    document.addEventListener('keydown', onKey);
+    const onResize = () => go(cur, false);
+    window.addEventListener('resize', onResize);
+    requestAnimationFrame(() => { go(state.feedPos || 0, false); onScroll(); });
+    cleanup = () => {
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+      clearTimeout(saveT);
+      state.feedPos = Math.max(0, cur); save();
+    };
+  }
+
   /* ---------------- 學習路徑 ---------------- */
   function pathView(v) {
     setTitle('學習路徑');
     const next = nextLesson();
-    v.innerHTML = `<h1>學習路徑</h1><p class="muted" style="margin-top:-6px">完成每一課的測驗就能解鎖下一課。目前進度 ${doneCount()} / ${LESSONS.length}。</p>` +
+    v.innerHTML = `<h1>學習路徑</h1><p class="muted" style="margin-top:-6px">建議依序學習，也可以直接挑有興趣的主題。目前進度 ${doneCount()} / ${LESSONS.length}。</p>` + savedHTML() +
       CHAPTERS.map((c) => {
         const ls = chLessons(c.id);
         const d = ls.filter((l) => isDone(l.id)).length;
@@ -253,7 +402,7 @@ ${next ? `
     const l = LESSONS[i];
     if (!l) { location.hash = '#/path'; return; }
     if (!isUnlocked(id)) { toast('🔒 先完成上一課才能解鎖喔'); location.hash = '#/path'; return; }
-    setTitle(l.id + ' ' + l.title, '#/path');
+    setTitle(l.id + ' ' + l.title, lastList === '#/' ? '#/' : '#/path');
     markActive();
     const ch = CHAPTERS[l.ch - 1];
     const prev = LESSONS[i - 1]; const nxt = LESSONS[i + 1];
@@ -262,7 +411,7 @@ ${next ? `
 <div class="lesson-head">
   <div class="crumbs"><a href="#/path">學習路徑</a><span>›</span><span>第 ${ch.id} 章 ${ch.title}</span></div>
   <h1>${l.emoji} ${l.title}</h1>
-  <div class="pills"><span class="pill">⏱ 約 ${l.minutes} 分鐘</span><span class="pill">第 ${i + 1} / ${LESSONS.length} 課</span>${isDone(id) ? '<span class="pill green">✓ 已完成</span>' : ''}</div>
+  <div class="pills"><span class="pill">⏱ 約 ${l.minutes} 分鐘</span><span class="pill">第 ${i + 1} / ${LESSONS.length} 課</span>${isDone(id) ? '<span class="pill green">✓ 已完成</span>' : ''}<button class="pill save-pill ${isSaved(id) ? 'on' : ''}" data-save="${id}">${isSaved(id) ? '♥ 已收藏' : '♡ 收藏'}</button></div>
 </div>
 <div class="steps">${LESSONS.filter((x) => x.ch === l.ch).map((x) => `<span class="${isDone(x.id) || x.id === id ? 'on' : ''}"></span>`).join('')}</div>
 <article class="prose">${l.body}</article>
@@ -273,6 +422,7 @@ ${l.practice ? practiceHTML(l) : ''}
   ${l.quiz.map((q, qi) => `<div class="q" data-q="${qi}"><div class="q-title">${qi + 1}. ${esc(q.q)}</div><div class="q-opts">${q.opts.map((o, oi) => `<button class="q-opt" data-o="${oi}"><span class="letter">${'ABCD'[oi]}</span><span>${esc(o)}</span></button>`).join('')}</div></div>`).join('')}
   <div id="quiz-result"></div>
 </section>
+${lastList === '#/' ? `<a class="btn back-to-cards" href="#/">🃏 回到卡片繼續滑</a>` : ''}
 <nav class="lesson-nav">
   ${prev ? `<a class="btn" href="#/lesson/${prev.id}">‹ ${prev.title}</a>` : '<span></span>'}
   ${nxt ? `<a class="btn ${isDone(id) ? 'primary' : ''}" id="next-btn" href="#/lesson/${nxt.id}" ${isUnlocked(nxt.id) ? '' : 'aria-disabled="true"'}>${nxt.title} ›</a>` : `<a class="btn" href="#/profile">🎓 查看成就</a>`}
@@ -790,7 +940,7 @@ ${l.practice ? practiceHTML(l) : ''}
     if (/iPhone|iPad|iPod/.test(navigator.userAgent)) return toast('📱 Safari：點「分享」→「加入主畫面」');
     toast('💡 用瀏覽器選單中的「安裝應用程式 / 加到主畫面」即可安裝');
   }
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  if ('serviceWorker' in navigator && !native && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 

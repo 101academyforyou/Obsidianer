@@ -1,7 +1,7 @@
 /* 離線快取：先回快取，背景更新 */
-const CACHE = 'obsidianer-v1';
+const CACHE = 'obsidianer-v2';
 const ASSETS = [
-  './', './index.html', './css/style.css', './js/markdown.js', './js/lessons.js', './js/app.js',
+  './', './index.html', './privacy.html', './css/style.css', './js/markdown.js', './js/lessons.js', './js/app.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'
 ];
 self.addEventListener('install', (e) => {

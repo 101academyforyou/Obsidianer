@@ -518,3 +518,137 @@ a.lesson-item:hover { border-color: rgba(138,92,245,.55); background: #232029; t
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ==========================================================
+   滑卡探索（Feed）
+   ========================================================== */
+:root { --topbar-h: 56px; --bnav-h: 60px; }
+body.feed-mode .view.feed-view { padding: 0; max-width: none; }
+.feed-wrap { position: relative; height: 100vh; height: 100dvh; }
+.feed {
+  height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  scroll-snap-type: y mandatory; scrollbar-width: none;
+}
+.feed::-webkit-scrollbar { display: none; }
+.feed-progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: transparent; z-index: 5; pointer-events: none; }
+.feed-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--deep), var(--accent-2)); transition: width .3s ease; }
+
+.fcard {
+  height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  padding: 18px 16px; display: flex; justify-content: center;
+}
+.fcard-inner {
+  --c1: hsl(var(--h) 80% 65% / .38);
+  --c2: hsl(calc(var(--h) - 30) 60% 35% / .55);
+  width: 100%; max-width: 540px; height: 100%;
+  border-radius: 26px; padding: 22px 22px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  background:
+    radial-gradient(ellipse at 100% 0%, var(--c1), transparent 55%),
+    radial-gradient(ellipse at 0% 100%, var(--c2), transparent 60%),
+    linear-gradient(160deg, #1c1828, #121016);
+  border: 1px solid hsl(var(--h) 70% 65% / .28);
+  box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+  overflow: hidden; cursor: pointer; position: relative;
+  transition: transform .2s ease;
+}
+.fcard-inner.fc-welcome { cursor: default; align-items: center; justify-content: center; text-align: center; gap: 16px; }
+.fc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.fc-num { font-family: var(--mono); font-size: 12.5px; color: var(--text-faint); }
+.fc-head { display: flex; align-items: center; gap: 14px; }
+.fc-emoji {
+  width: 64px; height: 64px; flex: none; border-radius: 18px; font-size: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: hsl(var(--h) 70% 60% / .16); border: 1px solid hsl(var(--h) 70% 65% / .25);
+}
+.fc-title { font-size: 26px; margin: 0 0 4px; line-height: 1.25; letter-spacing: .3px; }
+.fc-hook { font-size: 17px; color: #d6cff0; margin: 0; line-height: 1.65; }
+.fc-preview {
+  flex: 1; min-height: 0; overflow: auto;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10,9,14,.55); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px; padding: 14px;
+}
+.fc-split { width: 100%; display: grid; gap: 10px; }
+.fc-src {
+  margin: 0; background: rgba(0,0,0,.35); border: 1px dashed rgba(168,139,250,.3);
+  font-size: 13.5px; padding: 10px 12px; white-space: pre-wrap; color: #cbbcff;
+}
+.fc-code { width: 100%; }
+.fc-out { font-size: 15px; padding: 0 4px; }
+.fc-out > :first-child { margin-top: 0; }
+.fc-out h1 { font-size: 1.5em; } .fc-out h2 { font-size: 1.25em; } .fc-out h3 { font-size: 1.1em; }
+.fc-visual { width: 100%; }
+.fc-meta { font-size: 13px; color: var(--text-muted); }
+.fc-actions { display: flex; gap: 10px; align-items: stretch; }
+.fc-go { flex: 1; padding: 13px 16px; font-size: 16px; border-radius: 14px; box-shadow: 0 8px 24px rgba(138,92,245,.35); }
+.fc-save {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 14px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: var(--text-muted); cursor: pointer; font-size: 14px;
+}
+.fc-save svg { width: 18px; height: 18px; }
+.fc-save.on { color: #f472b6; border-color: rgba(244,114,182,.4); background: rgba(244,114,182,.1); }
+.fc-save.on svg { fill: currentColor; }
+.fc-gem { width: 120px; height: 120px; filter: drop-shadow(0 0 30px rgba(138,92,245,.6)); animation: bob 5s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-8px) rotate(3deg); } }
+.fc-end-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; }
+.swipe-hint { margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--accent-2); font-size: 14px; }
+.swipe-hint .arrow { animation: nudge 1.6s ease-in-out infinite; }
+.swipe-hint svg { width: 26px; height: 26px; }
+@keyframes nudge { 50% { transform: translateY(-8px); opacity: .6; } }
+.only-touch { display: none; }
+@media (hover: none) and (pointer: coarse) { .only-touch { display: inline; } .only-mouse { display: none; } }
+
+.feed-side {
+  position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 5;
+  font-family: var(--mono); font-size: 12px; color: var(--text-faint);
+}
+.feed-side .icon-btn { background: var(--bg-3); border: 1px solid var(--border); border-radius: 50%; }
+.feed-side .icon-btn:disabled { opacity: .3; cursor: default; }
+
+/* 卡片內的小視覺 */
+.cv-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.cv-chips span { background: rgba(138,92,245,.14); border: 1px solid rgba(168,139,250,.25); color: #ddd3ff; padding: 6px 12px; border-radius: 99px; font-size: 14px; }
+.cv-chips.big span { font-size: 17px; padding: 10px 16px; }
+.cv-steps { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 15px; }
+.cv-steps span { background: var(--bg-3); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); }
+.cv-steps b { color: var(--accent-2); }
+.cv-palette { max-width: 320px; margin: 0 auto; background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 13.5px; }
+.cv-palette > div { padding: 8px 12px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.cv-palette .cv-input { border-bottom: 1px solid var(--border); color: var(--text-muted); }
+.cv-palette .sel { background: var(--accent-soft); color: var(--accent-2); }
+.cv-palette kbd { font-size: 11px; }
+.cv-cap { text-align: center; margin: 10px 0 0; font-size: 14px; color: var(--text-muted); }
+.cv-panel { max-width: 320px; margin: 0 auto; background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; }
+.cv-panel > div { padding: 7px 12px; border-top: 1px solid var(--border-soft); }
+.cv-panel .cv-ph { border-top: none; color: var(--accent-2); font-weight: 600; }
+.cv-graph { width: 100%; max-width: 320px; display: block; margin: 0 auto; }
+.cv-sync { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 42px; }
+.cv-sync i { font-style: normal; font-size: 22px; color: var(--accent-2); animation: nudge 2s ease-in-out infinite; }
+
+.save-pill { cursor: pointer; font: inherit; font-size: 12px; }
+.save-pill.on { color: #f472b6; background: rgba(244,114,182,.1); border-color: transparent; }
+.back-to-cards { width: 100%; margin-top: 24px; }
+
+@media (max-width: 900px) {
+  .topbar { height: var(--topbar-h); padding-top: 0; padding-bottom: 0; }
+  .bottom-nav { height: calc(var(--bnav-h) + env(safe-area-inset-bottom)); padding-top: 4px; padding-bottom: env(safe-area-inset-bottom); align-items: stretch; }
+  .feed-wrap { height: calc(100vh - var(--topbar-h) - var(--bnav-h)); height: calc(100dvh - var(--topbar-h) - var(--bnav-h) - env(safe-area-inset-bottom)); }
+  .feed-side { display: none; }
+  .fcard { padding: 12px 12px; }
+  .fcard-inner { padding: 18px 18px 16px; border-radius: 22px; }
+  .fc-title { font-size: 23px; }
+  .fc-hook { font-size: 16px; }
+  .fc-emoji { width: 54px; height: 54px; font-size: 28px; border-radius: 15px; }
+}
+@media (max-height: 640px) {
+  .fc-hook { font-size: 15px; }
+  .fc-meta { display: none; }
+  .fc-emoji { width: 46px; height: 46px; font-size: 24px; }
+  .fc-title { font-size: 21px; }
+}
+/* 原生 App：頂部安全區 */
+.native .topbar { padding-top: env(safe-area-inset-top); height: calc(var(--topbar-h) + env(safe-area-inset-top)); }
+.native .feed-wrap { height: calc(100dvh - var(--topbar-h) - env(safe-area-inset-top) - var(--bnav-h) - env(safe-area-inset-bottom)); }
+@media (min-width: 901px) { .native .feed-wrap { height: 100dvh; } }
