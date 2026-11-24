@@ -1,5 +1,17 @@
 # 上架指南：App Store、Google Play 與網頁版
 
+## ✅ 已決定的設定
+
+| 項目 | 設定 |
+| --- | --- |
+| App Store 名稱 | **Obsidianer 筆記學院**（在 App Store Connect 填寫；主畫面圖示下方顯示 `Obsidianer`） |
+| 副標題 | 非官方 Obsidian 新手教學 |
+| Bundle ID | `app.obsidianer.learn` |
+| 裝置 | **只支援 iPhone**（`TARGETED_DEVICE_FAMILY = 1`），只能直向 |
+| 截圖 | `assets/appstore/iphone-6.9/`：6 張 1320 × 2868，可直接上傳到 6.9 吋 iPhone 欄位 |
+| 隱私權政策 | https://obsidianer.onepointzeroone.org/privacy.html |
+| 支援網址 | https://obsidianer.onepointzeroone.org/ |
+
 Obsidianer 用同一份網頁程式碼，透過 [Capacitor](https://capacitorjs.com) 包成 iOS 與 Android App。
 `ios/` 和 `android/` 兩個原生專案已經建立好，App 圖示與啟動畫面也已放進去。
 
