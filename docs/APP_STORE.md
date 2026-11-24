@@ -1,5 +1,7 @@
 # 上架指南：App Store、Google Play 與網頁版
 
+> 💡 **不想在自己電腦裝 Xcode？** 用 GitHub 雲端 Mac 一鍵打包上傳：見 **[IOS_CLOUD_BUILD.md](IOS_CLOUD_BUILD.md)**。
+
 ## ✅ 已決定的設定
 
 | 項目 | 設定 |

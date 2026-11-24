@@ -53,6 +53,8 @@ npm run ios       # 需要 Mac + Xcode
 npm run android   # 需要 Android Studio
 ```
 
+沒有 Xcode 也可以：用 GitHub 雲端 Mac 一鍵打包上傳 TestFlight，見 [docs/IOS_CLOUD_BUILD.md](docs/IOS_CLOUD_BUILD.md)。
+
 上架 App Store / Google Play 的完整步驟（含商標、隱私權、審核注意事項）請看 **[docs/APP_STORE.md](docs/APP_STORE.md)**。
 
 ## 網頁版
