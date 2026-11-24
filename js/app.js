@@ -97,6 +97,7 @@
     cards: '<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h3"/>',
     up: '<path d="m18 15-6-6-6 6"/>',
     down: '<path d="m6 9 6 6 6-6"/>',
+    idcard: '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5 16c.6-1.6 2-2.4 3.5-2.4s2.9.8 3.5 2.4M14.5 10h4M14.5 14h3"/>',
     heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>'
   };
   const icon = (n) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICONS[n] + '</svg>';
@@ -109,6 +110,7 @@
     { r: '/path', label: '學習路徑', short: '課程', ico: 'path' },
     { r: '/playground', label: '練習場', short: '練習', ico: 'play' },
     { r: '/graph', label: '關係圖譜', short: '圖譜', ico: 'graph' },
+    { r: '/card', label: '名片與人脈', short: '名片', ico: 'idcard' },
     { r: '/shortcuts', label: '快捷鍵', short: '快捷鍵', ico: 'keys' },
     { r: '/profile', label: '我的成就', short: '成就', ico: 'user' }
   ];
@@ -160,7 +162,7 @@
 
   function setActiveNav(route) {
     const base = '/' + (route.split('/')[1] || '');
-    const navBase = base === '/lesson' ? '/path' : base;
+    const navBase = base === '/lesson' ? '/path' : ['/people', '/network', '/c'].includes(base) ? '/card' : base;
     $$('[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === navBase));
   }
 
@@ -192,6 +194,11 @@
     else if (parts[0] === 'graph') graphView(view);
     else if (parts[0] === 'shortcuts') shortcutsView(view);
     else if (parts[0] === 'profile') profileView(view);
+    else if (parts[0] === 'card') CX.cardView(view);
+    else if (parts[0] === 'people' && parts[1]) CX.personView(view, decodeURIComponent(parts[1]), parts[2]);
+    else if (parts[0] === 'people') CX.peopleView(view);
+    else if (parts[0] === 'network') CX.networkView(view);
+    else if (parts[0] === 'c' && parts[1]) CX.receiveView(view, parts[1]);
     else feedView(view);
     window.scrollTo(0, 0);
     updateChrome();
@@ -718,6 +725,7 @@ ${lastList === '#/' ? `<a class="btn back-to-cards" href="#/">🃏 回到卡片�
         else if (n.kind === 'todo') fill = '#7a7a7a';
         else if (n.kind === 'ghost') fill = '#4a4a4a';
         else if (n.kind === 'tag') fill = '#4ade80';
+        else if (n.kind === 'event') fill = '#facc15';
         ctx.globalAlpha = dim ? 0.2 : 1;
         if ((n.kind === 'done' || n.kind === 'hub' || n === focus) && !dim) { ctx.shadowColor = '#8a5cf5'; ctx.shadowBlur = n === focus ? 22 : 12; }
         ctx.fillStyle = n === focus ? '#d8ccff' : fill;
@@ -781,7 +789,7 @@ ${lastList === '#/' ? `<a class="btn back-to-cards" href="#/">🃏 回到卡片�
         if (n.href) location.hash = n.href;
         else if (SAMPLE_VAULT[n.id] != null) showNote(n.id);
         else if (n.kind === 'todo') toast('🔒 先完成前面的課程才能解鎖');
-        else if (n.kind === 'ghost') toast('📄「' + n.id + '」還沒建立——就像 Obsidian 中未建立的連結');
+        else if (n.kind === 'ghost') toast('📄「' + n.label + '」還沒建立——就像 Obsidian 中未建立的連結');
       }
       drag = null; down = null; canvas.style.cursor = 'grab';
     }
@@ -943,6 +951,9 @@ ${lastList === '#/' ? `<a class="btn back-to-cards" href="#/">🃏 回到卡片�
   if ('serviceWorker' in navigator && !native && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
+
+  /* ---------------- 名片與人脈（js/connect.js）---------------- */
+  const CX = window.Connect({ $, $$, esc, icon, toast, haptic, setTitle, makeGraph, native, setCleanup: (fn) => { cleanup = fn; } });
 
   /* ---------------- 啟動 ---------------- */
   document.addEventListener('keydown', (e) => {
