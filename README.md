@@ -1,6 +1,6 @@
 # Obsidianer · Obsidian 新手學院 💎
 
-🌐 網頁版：https://obsidianer.onepointzeroone.org/
+🌐 介紹網頁：https://obsidianer.onepointzeroone.org/ · 網頁版 App：https://obsidianer.onepointzeroone.org/app/
 
 給**完全初學者**用「滑卡片」的方式學習 [Obsidian](https://obsidian.md) 的 App + 網頁，採用 Obsidian 風格的紫黑色深色主題。
 

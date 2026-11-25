@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # 每天更新一次 App Store 下載數（台灣時間早上 10:17）
+  schedule:
+    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 1. 建置：只把網頁檔案複製到 www/（不含 ios/、android/），上傳成 Pages 檔案包
+  # 1. 建置：介紹網頁 + 學習 App（/app/）+ 下載數，上傳成 Pages 檔案包
   build:
     runs-on: ubuntu-latest
     steps:
@@ -23,11 +26,26 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: node scripts/build-www.mjs
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      # 從 App Store Connect 銷售報告計算累計下載數；失敗或缺少 Secrets 時會略過，不影響部署
+      - name: 統計 App Store 下載數
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_VENDOR_NUMBER: ${{ secrets.ASC_VENDOR_NUMBER }}
+        run: |
+          pip install --quiet pyjwt cryptography
+          python scripts/fetch_downloads.py stats.json
+
+      - run: node scripts/build-site.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: www
+          path: site
 
   # 2. 部署：等建置完成後再發布
   deploy:

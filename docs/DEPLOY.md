@@ -1,5 +1,29 @@
 # 網頁版部署：obsidianer.onepointzeroone.org
 
+## 網站結構
+
+| 網址 | 內容 | 原始檔 |
+| --- | --- | --- |
+| `/` | 介紹網頁（含 App Store 下載人數） | `landing/` |
+| `/app/` | 學習網頁 App（與 iOS / Android App 相同） | 專案根目錄的 `index.html`、`css/`、`js/` |
+| `/privacy.html` | 隱私權政策（App Store 使用，路徑不可改） | `privacy.html` |
+| `/stats.json` | 累計下載數，每天自動更新 | `scripts/fetch_downloads.py` 產生 |
+
+`scripts/build-site.mjs` 會把以上組合到 `site/` 再發布。部署流程在推送到 `main` 時執行，**另外每天台灣時間 10:17 自動重新部署一次**，以更新下載數。
+
+### 下載人數需要的 Secret
+
+除了上架用的 `ASC_KEY_ID`、`ASC_ISSUER_ID`、`ASC_KEY_P8`，還需要新增：
+
+| Name | 值 | 在哪裡找 |
+| --- | --- | --- |
+| `ASC_VENDOR_NUMBER` | 廠商編號（8 碼左右的數字） | App Store Connect →「**報告**」（付款與財務報告）頁面，左上角帳號名稱下方的數字 |
+
+沒有設定、或 App 還沒有任何下載時，介紹網頁會顯示「19 堂課程 · 6 個章節 · App Store 即將上架」。
+只計算**首次下載**（不含更新與重新下載），資料來自 App Store Connect 銷售報告，通常有 1 天延遲。
+
+---
+
 網頁版用 **GitHub Pages** 發布到 **https://obsidianer.onepointzeroone.org/**。
 程式碼這邊已經設定好，只差下面三個一次性的設定，需要由你操作。
 
